@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t roshinipe/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run roshinipe/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t roshinipe/multi-client ./client
+  - docker build -t roshinipe/multi-nginx ./nginx
+  - docker build -t roshinipe/multi-server ./server
+  - docker build -t roshinipe/multi-worker ./worker
+  # Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push roshinipe/multi-client
+  - docker push roshinipe/multi-nginx
+  - docker push roshinipe/multi-server
+  - docker push roshinipe/multi-worker
